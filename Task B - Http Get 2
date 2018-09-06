@@ -1,0 +1,32 @@
+No.     Time           Source                Destination           Protocol Length Info
+     21 7.008243       10.255.133.5          128.119.245.12        HTTP     562    GET /wireshark-labs/HTTP-wireshark-file2.html HTTP/1.1 
+
+Frame 21: 562 bytes on wire (4496 bits), 562 bytes captured (4496 bits) on interface 0
+Ethernet II, Src: HonHaiPr_21:e3:85 (48:e2:44:21:e3:85), Dst: IETF-VRRP-VRID_39 (00:00:5e:00:01:39)
+Internet Protocol Version 4, Src: 10.255.133.5, Dst: 128.119.245.12
+Transmission Control Protocol, Src Port: 8299, Dst Port: 80, Seq: 397, Ack: 731, Len: 508
+Hypertext Transfer Protocol
+    GET /wireshark-labs/HTTP-wireshark-file2.html HTTP/1.1\r\n
+        [Expert Info (Chat/Sequence): GET /wireshark-labs/HTTP-wireshark-file2.html HTTP/1.1\r\n]
+            [GET /wireshark-labs/HTTP-wireshark-file2.html HTTP/1.1\r\n]
+            [Severity level: Chat]
+            [Group: Sequence]
+        Request Method: GET
+        Request URI: /wireshark-labs/HTTP-wireshark-file2.html
+        Request Version: HTTP/1.1
+    Host: gaia.cs.umass.edu\r\n
+    User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:62.0) Gecko/20100101 Firefox/62.0\r\n
+    Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n
+    Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\r\n
+    Accept-Encoding: gzip, deflate\r\n
+    DNT: 1\r\n
+    Connection: keep-alive\r\n
+    Upgrade-Insecure-Requests: 1\r\n
+    If-Modified-Since: Thu, 06 Sep 2018 05:59:01 GMT\r\n
+    If-None-Match: "173-5752d966fd44f"\r\n
+    Cache-Control: max-age=0\r\n
+    \r\n
+    [Full request URI: http://gaia.cs.umass.edu/wireshark-labs/HTTP-wireshark-file2.html]
+    [HTTP request 2/2]
+    [Prev request in frame: 14]
+    [Response in frame: 22]

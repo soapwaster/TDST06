@@ -1,0 +1,28 @@
+No.     Time           Source                Destination           Protocol Length Info
+     22 7.183117       128.119.245.12        10.255.133.5          HTTP     293    HTTP/1.1 304 Not Modified 
+
+Frame 22: 293 bytes on wire (2344 bits), 293 bytes captured (2344 bits) on interface 0
+Ethernet II, Src: IETF-VRRP-VRID_39 (00:00:5e:00:01:39), Dst: HonHaiPr_21:e3:85 (48:e2:44:21:e3:85)
+Internet Protocol Version 4, Src: 128.119.245.12, Dst: 10.255.133.5
+Transmission Control Protocol, Src Port: 80, Dst Port: 8299, Seq: 731, Ack: 905, Len: 239
+Hypertext Transfer Protocol
+    HTTP/1.1 304 Not Modified\r\n
+        [Expert Info (Chat/Sequence): HTTP/1.1 304 Not Modified\r\n]
+            [HTTP/1.1 304 Not Modified\r\n]
+            [Severity level: Chat]
+            [Group: Sequence]
+        Response Version: HTTP/1.1
+        Status Code: 304
+        [Status Code Description: Not Modified]
+        Response Phrase: Not Modified
+    Date: Thu, 06 Sep 2018 14:38:50 GMT\r\n
+    Server: Apache/2.4.6 (CentOS) OpenSSL/1.0.2k-fips PHP/5.4.16 mod_perl/2.0.10 Perl/v5.16.3\r\n
+    Connection: Keep-Alive\r\n
+    Keep-Alive: timeout=5, max=99\r\n
+    ETag: "173-5752d966fd44f"\r\n
+    \r\n
+    [HTTP response 2/2]
+    [Time since request: 0.174874000 seconds]
+    [Prev request in frame: 14]
+    [Prev response in frame: 16]
+    [Request in frame: 21]
