@@ -17,7 +17,7 @@ def child():
 		url_stuff = data.split("\n")[0]
 		if "prova" in url_stuff:
 			print("not good")
-			redirect = "HTTP/1.1 200 OK\nDate: Wed, 11 Apr 2012 21:29:04 GMT\nServer: Python/6.6.6 (custom)\nContent-Type: text/html\r\n"
+			redirect = "HTTP/1.1 301 Moved Permanently\nLocation: https://www.liu.se//\nConnection: close\nContent-length: 0\r\n\r\n"
 			conn.send(redirect)
 
 
