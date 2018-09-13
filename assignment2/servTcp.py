@@ -17,11 +17,15 @@ def child():
 		url_stuff = data.split("\n")[0]
 		if "prova" in url_stuff:
 			print("not good")
-		
+			redirect = "HTTP/1.1 200 OK\nDate: Wed, 11 Apr 2012 21:29:04 GMT\nServer: Python/6.6.6 (custom)\nContent-Type: text/html\r\n"
+			conn.send(redirect)
+
 
 	conn.close()
 	os._exit(0)
 
+def get_header(http_content):
+	return http_content.split("\r\n")
 signal.signal(signal.SIGCHLD,signal.SIG_IGN)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
