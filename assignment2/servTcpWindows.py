@@ -37,6 +37,7 @@ def child():
 
 def get_header(http_content):
 	return http_content.split("\r\n")
+
 #signal.signal(signal.SIGCHLD,signal.SIG_IGN)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -50,3 +51,10 @@ while 1:
 #	else:
 	conn.close()
 s.close()
+
+
+
+
+#Questions : Keep-alive/close ?
+#Why sometimes when we click on links the proxy "doesn't see" it, same for Wireshark ? 
+#	Do we have to wait a little ? Is it because the pages we go on are cached ?
