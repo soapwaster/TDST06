@@ -59,43 +59,6 @@ def child():
 	conn.close()
 	os._exit(0)
 
-def get_header(http_content):
-	return http_content.split("\r\n\r\n")
-
-def get_url(data):
-	return data.split("\n")[0].strip()
-def get_host(data):
-	try:
-		hn = data.split("\n")[1].strip()
-	except IndexError:
-		print data.split("\n")
-		os._exit(1)
-	return hn
-def is_contenttype_text(data):
-	return "text" in data[0:1000].lower().split("content-type:")[1].split("\n")[0]
-def is_analyize_content_ok(content):
-	low_content = content.lower()
-	for el in not_good_words:
-		if el in low_content:
-			return False
-	return True;
-def redirect_to(socket, page):
-	redirect = "HTTP/1.1 301 Moved Permanently\nLocation: "+page+"\nConnection: close\nContent-length: 0\r\n\r\n"
-	socket.send(redirect)
-def allow_request(url):
-	return is_analyize_content_ok(url)
-def get_host_name(host_line):
-	try:
-		hn = host_line.split(":")[1].strip()
-	except IndexError:
-		print host_line
-		os._exit(1)
-	return hn
-def send_http_request(socket, hostname, url, host):
-	socket.connect((hostname, 80))
-	socket.send(''+url+'\r\n'+host+"\r\n\r\n")
-
-
 signal.signal(signal.SIGCHLD,signal.SIG_IGN)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -109,3 +72,47 @@ while 1:
 	else:
 		conn.close()
 s.close()
+
+
+def get_header(http_content):
+	return http_content.split("\r\n\r\n")
+
+def get_url(data):
+	return data.split("\n")[0].strip()
+
+def get_host(data):
+	try:
+		hn = data.split("\n")[1].strip()
+	except IndexError:
+		print data.split("\n")
+		os._exit(1)
+	return hn
+
+def is_contenttype_text(data):
+	return "text" in data[0:1000].lower().split("content-type:")[1].split("\n")[0]
+
+def is_analyize_content_ok(content):
+	low_content = content.lower()
+	for el in not_good_words:
+		if el in low_content:
+			return False
+	return True;
+
+def redirect_to(socket, page):
+	redirect = "HTTP/1.1 301 Moved Permanently\nLocation: "+page+"\nConnection: close\nContent-length: 0\r\n\r\n"
+	socket.send(redirect)
+
+def allow_request(url):
+	return is_analyize_content_ok(url)
+
+def get_host_name(host_line):
+	try:
+		hn = host_line.split(":")[1].strip()
+	except IndexError:
+		print host_line
+		os._exit(1)
+	return hn
+
+def send_http_request(socket, hostname, url, host):
+	socket.connect((hostname, 80))
+	socket.send(''+url+'\r\n'+host+"\r\n\r\n")
