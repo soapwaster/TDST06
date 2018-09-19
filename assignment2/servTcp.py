@@ -26,7 +26,7 @@ def child():
 		total_data = []
 		#Initialize socket for talking to the server
 		ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		ss.settimeout(5)
+		ss.settimeout(1000000)
 		#Get host name and send the same request the client did
 		host_name = get_host_name(host_stuff)
 		send_http_request(ss, host_name, url_stuff, host_stuff)
@@ -74,7 +74,7 @@ def get_host(data):
 	return hn
 
 def is_contenttype_text(data):
-	return "text" in data[0:1000].lower().split("content-type:")[1].split("\n")[0]
+	return "text" in data[0:len(data)].lower().split("content-type:")[1].split("\n")[0]
 
 def is_analyize_content_ok(content):
 	low_content = content.lower()
