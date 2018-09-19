@@ -15,7 +15,7 @@ def child():
 
 
 	data = conn.recv(1024)
-#	if not data:break
+	#if not data:break
 	url_stuff = get_url(data)
 	host_stuff = get_host(data)
 	if not allow_request(url_stuff):
@@ -59,21 +59,6 @@ def child():
 	conn.close()
 	os._exit(0)
 
-signal.signal(signal.SIGCHLD,signal.SIG_IGN)
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-s.bind((HOST,PORT))
-s.listen(100)
-while 1:
-	conn, addr = s.accept()
-	pid=os.fork()
-	if pid == 0:
-		child()
-	else:
-		conn.close()
-s.close()
-
-
 def get_header(http_content):
 	return http_content.split("\r\n\r\n")
 
@@ -116,3 +101,17 @@ def get_host_name(host_line):
 def send_http_request(socket, hostname, url, host):
 	socket.connect((hostname, 80))
 	socket.send(''+url+'\r\n'+host+"\r\n\r\n")
+
+signal.signal(signal.SIGCHLD,signal.SIG_IGN)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+s.bind((HOST,PORT))
+s.listen(100)
+while 1:
+	conn, addr = s.accept()
+	pid=os.fork()
+	if pid == 0:
+		child()
+	else:
+		conn.close()
+s.close()
