@@ -6,37 +6,65 @@ import os
 import errno
 import signal
 
+BACKLOG = 100
 HOST = '127.0.0.1'
-PORT = int(2890)            # The same port as used by the server
-not_good_words = ["spongebob", "britney spears", "paris hilton", "norrkopping"]
+PORT = int(2890)            # Default port number
+not_good_words = ["spongebob", "britney spears", "paris hilton", "norrkopping"] #Words recognized ad "bad words"
+flag_got_non_text_header = False
+flag_first_time = True
 
 def child():
+	#Since the child is a copy of the initial process close the listening socket, since this process doesn't have to listen for incoming connections
 	s.close()
 
+	#Get browser's HTTP request
 	data = conn.recv(1024)
-	#if not data:break
+
+	#Get both the url and the host name (actually the first whole two lines of the HTTP header)
 	url_stuff = get_url(data)
 	host_stuff = get_host(data)
+
+	#If the request's URL contains one or more of the *not_good_words*, then redirect the browser by sending a Redirect Response (via the *conn* socket used for communicating between browser and proxy)
 	if not allow_request(url_stuff):
 		redirect_to(conn, "https://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html")
 	else:
-		#Create socket as client
-		client_req = data
 		total_data = []
-		#Initialize socket for talking to the server
+
+		#Create socket to communicate with the Web Server
 		ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		#ss.settimeout(10)
-		#Get host name and send the same request the client did
+		ss.settimeout(50)
+
+		#Get host name and send the same request the client did, by also changing the "Connection" field to : close.
 		host_name = get_host_name(host_stuff)
 		send_http_request(ss, host_name, url_stuff, host_stuff)
+
 		#Start fetching until the end of the content.
 		while 1:
+			#Handle the fetching, including socket errors, like SIGPIPE in case the other end closes the connection unexpectedly
 			try:
+				#Take 4KB of data from the socket queue.
 				data  = ss.recv(4096)
+
+				#If there is no data to take, this means we reached EOF, since it's a blocking function
 				if len(data) == 0 :
 					break
-				#conn.send(data)
-				total_data.append(data)
+
+				# Since it's TCP packets will arrive in order, this means I can be sure to get the header first. Thus, this condition makes sense
+				#If it's the first actual data I'm receiving from the Server, then it's a header.
+				#Check the content type (if any) to speed up the computation
+				#since, if I see it's not text, then I don't have to store it to analyize it later on. I can directly send it to the browser.
+				if flag_first_time:
+					flag_first_time = False
+					if is_contenttype(data):
+						if not is_contenttype_text(data):
+							#It's not text, and that means I can from now on send every byte of the current connection directly to the browser
+							#since I don't have to check it. This is possible since I have "Connection: close". I know I won't get any text content during this connection
+							flag_got_non_text_header = True
+				if flag_got_non_text_header:
+					conn.sendall(data)
+				else:
+					#It's text data, that means I cannot send the content right away, I have to store it and then check if it's suitable for the browser
+					total_data.append(data)
 			except socket.error, e:
 				if isinstance(e.args, tuple):
 					if e[0] == errno.EPIPE:
@@ -46,41 +74,92 @@ def child():
 				else:
 					print "socket error ", e
 				break
-		page_txt = "".join(total_data)
-		if is_contenttype(data):
-			if not is_contenttype_text(page_txt):
-				conn.sendall(page_txt)
-			else:
-				if is_analyize_content_ok(page_txt):
-					conn.sendall(page_txt)
-				else:
+		#If it was not text content just skip the analyize part, since "total_data" would be empty
+		if not flag_got_non_text_header:
+			#Make the whole "total_data", a single string
+			page_txt = "".join(total_data)
+
+			if is_contenttype(page_txt):
+				if not is_analyize_content_ok(page_txt):
 					redirect_to(conn, "https://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html")
-		else:
+					ss.close()
+					break
+			#Wheter it has Content type or not, it has to be sent to the browser (may be a 302/301/... Response)
 			conn.sendall(page_txt)
+	#House-keeping stuff. Closing both the socket to the browser and the one to the Web Server
 		ss.close()
 	conn.close()
 	os._exit(0)
 
-def get_header(http_content):
-	return http_content.split("\r\n\r\n")
+def main():
 
+	#Signal handling, in order to ignore the death of a child
+	signal.signal(signal.SIGCHLD,signal.SIG_IGN)
+
+	PORT = input("Type the number of the port you want to use :")
+
+	#Create socket as server
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	s.bind((HOST,PORT))
+
+	#Make it ready for any request
+	s.listen(BACKLOG)
+
+	while 1:
+		#Wait for a connect() from the client (the browser)
+		conn, addr = s.accept()
+
+		#Spawn a new child
+		pid=os.fork()
+
+		#If the current process executing this code is the child
+		if pid == 0:
+			child()
+		else:
+			conn.close()
+	s.close()
+
+
+#Take the first line of a GET request
 def get_url(data):
 	return data.split("\n")[0].strip()
 
+#Take the second line of a GET request
 def get_host(data):
 	try:
 		hn = data.split("\n")[1].strip()
 	except IndexError:
-		print data.split("\n")
 		os._exit(1)
 	return hn
 
+'''
+Checks whether the Response has a "Content-Type" field, since it may be a 301/... Response
+param :
+	data : String
+returns:
+	True if content type is inside data
+'''
 def is_contenttype(data):
 	return "content-type" in data.lower()
 
+'''
+Checks whether the "Content-Type" field is text
+param :
+	data : String
+returns:
+	True if content type is text
+'''
 def is_contenttype_text(data):
 	return "text" in data[0:len(data)].lower().split("content-type:")[1].split("\n")[0]
 
+'''
+Checks whether "content" contains bad words. It's inefficient but the list length is constant.
+param :
+	content : String
+returns:
+	True content doesn't contain any bad word
+'''
 def is_analyize_content_ok(content):
 	low_content = content.lower()
 	for el in not_good_words:
@@ -88,13 +167,35 @@ def is_analyize_content_ok(content):
 			return False
 	return True
 
+'''
+Sends a new HTTP Response to the socket
+param :
+	socket : the socket
+	page: the URL where to redirect
+returns:
+	True if content type is inside data
+'''
 def redirect_to(socket, page):
 	redirect = "HTTP/1.1 301 Moved Permanently\nLocation: "+page+"\nConnection: close\nContent-length: 0\r\n\r\n"
 	socket.send(redirect)
 
+'''
+Checks for bad words
+param :
+	url : String
+returns:
+	True if url doesn't contain any bad word
+'''
 def allow_request(url):
 	return is_analyize_content_ok(url)
 
+'''
+Retuns the host name of a HTTP Request
+param :
+	host_line : String, the second line of a HTTP Request
+returns:
+	hn : Host name of a HTTP Request
+'''
 def get_host_name(host_line):
 	try:
 		hn = host_line.split(":")[1].strip()
@@ -103,24 +204,19 @@ def get_host_name(host_line):
 		os._exit(1)
 	return hn
 
+'''
+param :
+	socket : the socket to which you want to send the request
+	hostname : the second line of a HTTP request
+	url : the first line of a HTTP request
+	host : the host name
+returns:
+	none
+'''
 def send_http_request(socket, hostname, url, host):
 	socket.connect((hostname, 80))
 	socket.send(''+url+'\r\n'+host+'\r\n'+"Connection: close"+"\r\n\r\n")
 
 
-signal.signal(signal.SIGCHLD,signal.SIG_IGN)
-PORT = input("Type the number of the port you want to use :")
-#Create socket as server
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-s.bind((HOST,PORT))
-#Make it ready for any request
-s.listen(100)
-while 1:
-	conn, addr = s.accept()
-	pid=os.fork()
-	if pid == 0:
-		child()
-	else:
-		conn.close()
-s.close()
+if __name__== "__main__":
+	main()
