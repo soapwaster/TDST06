@@ -13,7 +13,6 @@ not_good_words = ["spongebob", "britney spears", "paris hilton", "norrkopping"]
 def child():
 	s.close()
 
-
 	data = conn.recv(1024)
 	#if not data:break
 	url_stuff = get_url(data)
@@ -26,7 +25,7 @@ def child():
 		total_data = []
 		#Initialize socket for talking to the server
 		ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		ss.settimeout(1000000)
+		#ss.settimeout(10)
 		#Get host name and send the same request the client did
 		host_name = get_host_name(host_stuff)
 		send_http_request(ss, host_name, url_stuff, host_stuff)
@@ -48,13 +47,16 @@ def child():
 					print "socket error ", e
 				break
 		page_txt = "".join(total_data)
-		if not is_contenttype_text(page_txt):
-			conn.sendall(page_txt)
-		else:
-			if is_analyize_content_ok(page_txt):
+		if is_contenttype(data):
+			if not is_contenttype_text(page_txt):
 				conn.sendall(page_txt)
 			else:
-				redirect_to(conn, "https://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html")
+				if is_analyize_content_ok(page_txt):
+					conn.sendall(page_txt)
+				else:
+					redirect_to(conn, "https://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html")
+		else:
+			conn.sendall(page_txt)
 		ss.close()
 	conn.close()
 	os._exit(0)
@@ -73,6 +75,9 @@ def get_host(data):
 		os._exit(1)
 	return hn
 
+def is_contenttype(data):
+	return "content-type" in data.lower()
+
 def is_contenttype_text(data):
 	return "text" in data[0:len(data)].lower().split("content-type:")[1].split("\n")[0]
 
@@ -81,7 +86,7 @@ def is_analyize_content_ok(content):
 	for el in not_good_words:
 		if el in low_content:
 			return False
-	return True;
+	return True
 
 def redirect_to(socket, page):
 	redirect = "HTTP/1.1 301 Moved Permanently\nLocation: "+page+"\nConnection: close\nContent-length: 0\r\n\r\n"
@@ -100,12 +105,16 @@ def get_host_name(host_line):
 
 def send_http_request(socket, hostname, url, host):
 	socket.connect((hostname, 80))
-	socket.send(''+url+'\r\n'+host+"\r\n\r\n")
+	socket.send(''+url+'\r\n'+host+'\r\n'+"Connection: close"+"\r\n\r\n")
+
 
 signal.signal(signal.SIGCHLD,signal.SIG_IGN)
+PORT = input("Type the number of the port you want to use :")
+#Create socket as server
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.bind((HOST,PORT))
+#Make it ready for any request
 s.listen(100)
 while 1:
 	conn, addr = s.accept()
