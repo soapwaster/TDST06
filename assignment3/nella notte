@@ -1,0 +1,14 @@
+	9. The minimum amount is 5840 byte, and it's advertised by the receiver during the handshake (it's in the Window Size field). Since it's always > 0, it means there was no time t where the buffer was full.
+	10. There are no retrasmission. First I checked the window size, and since it's always > 0, there is no packet drop. Then I checked for DUP ACKs, and in this trace we don't have them. Finally I checked if I has a duplicate sequence number at sender side, trying to find retrasmissiona because of timeout.
+	11. To do this, we should do an average on the difference between each pair of consecutive ACK number sent by the receiver, however it looks like it acknoledges about 2000 bytes at a time.
+	12. During the TCP connection the throughput is roughly 23KB/s. We calculated it by taking the total number of bytes sent, dividing it with the whole TCP connection time.
+
+
+	13. First, the two graphs are very different. The second one for example seems to apply the theoretical slow start mechanism. It starts by sending a lot of packets at a very fast speed, and then (probably after some treshold) sends them linearly with the time. 
+	The window size at receiver size never decreases, so it's probable that the congestion phase never takes over. Moreover, besised just one dupack (in figure 2b), there are no packet retransmission (since the number of the sequence number is always strictly monotonically increasing).
+	However the two implementations work differently since the first doesn't seem to use the AIMD phase.
+	14. The RWND is the number of bytes the receiver buffer can handle. This way, enables the congestion window (CWND) to determine the amount of data it can reliably transmit without an ACK. A sender can send unacknowledged data as long as it doesn't overflows the RWND. In that case, it has to wait for an ACK before sending other data, so that it will be sure not to fall into congestion avoidance mechanisms. The sender will adjust its "effective window" accordingly to the minumun value between (RWND and CWND).
+	15. From the traces is impossible to spot the CWND size. We can only assume that since in both traces, the sender never reduces its effective window (no CA mechanisms activated), then the CWND will never decrease. (MA PERCHE AUMENTA SEMPRE IL NUMERO DI BYTE MANDATI IN MANIERA LINEARE ?? SIGNIFICA CHE LA RWND STA AUMENTANDO ?? IO NON LO VEDO DAL COSO, ANZI RIMANE LA STESSA…SIGNIFICA CHE ALLORA LA MIA EFFECTIVE WINDOW ( O CWND perche rwnd sta sempre al top IN QUESTO CASO ) AUMENTA.
+
+
+	16. The TCP is fair, in the sense that for each connection it will use pretty much the same amount of bandwidth. Supposing no other connection are going on the client, since the bandwidth in this case is equally shared, it will be 4 * throughput
