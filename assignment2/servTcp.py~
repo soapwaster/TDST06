@@ -9,7 +9,7 @@ import signal
 BACKLOG = 100
 HOST = '127.0.0.1'
 PORT = int(2890)            # Default port number
-not_good_words = ["spongebob", "britney spears", "paris hilton", "norrkoping", "motala"] #Words recognized ad "bad words"
+not_good_words = ["spongebob", "britney spears", "paris hilton", "norrkopping"] #Words recognized ad "bad words"
 
 
 def child():
