@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class RouterNode {
@@ -19,7 +18,6 @@ public class RouterNode {
     System.arraycopy(costs, 0, this.costs, 0, RouterSimulator.NUM_NODES);
     getNeighbors();
     nTables = new int[RouterSimulator.NUM_NODES][RouterSimulator.NUM_NODES];
-    for(int i=0;i<nTables.length;i++) Arrays.fill(nTables[i], RouterSimulator.INFINITY);
     nTables[myID] = costs;
     //System.out.println(Arrays.toString(nTables[myID]));
     broadcast();
@@ -28,39 +26,23 @@ public class RouterNode {
   //--------------------------------------------------
   public void recvUpdate(RouterPacket pkt) {
     boolean flag = false;
+    
+    //System.out.println(Arrays.toString(pkt.mincost));
     nTables[pkt.sourceid] = pkt.mincost;
-    
-    for(int i = 0; i<pkt.mincost.length; i++){
-    	if (i != myID) {
-    		List<Integer> min = new ArrayList<>();
-        	for(int x : neighbors) {
-        		min.add(costs[x]+nTables[x][i]);
-        	}
-        	int min_value = Collections.min(min);
-        	if(myID == 2){
-        		System.out.println("min_value : " + min_value);
-            	System.out.println("nTables[" + myID + "]["+i+"]  : " + nTables[myID][i]);
-        	}
-        	if(min_value < nTables[myID][i]){
-        		flag = true;
-        	}
-        	nTables[myID][i] = min_value;
-    	}
+    System.out.println("myID = "+ myID +" ----> from "+pkt.sourceid +" --> "+Arrays.toString(nTables[myID]));
+    for(int i=0; i<pkt.mincost.length;i++){
+      int newPath = costs[pkt.sourceid] + pkt.mincost[i];
+      if(pkt.mincost[i] >= RouterSimulator.INFINITY){
+    	  flag = true;
+    	  nTables[myID][i] = costs[i];
+      }
+      else if(newPath < nTables[myID][i]){
+    	  //System.out.println("myID = "+ myID +" ----> newPath "+ newPath);
+    	  flag = true;
+    	  nTables[myID][i] = newPath;
+    	  //updateLinkCost(i, newPath);
+      }
     }
-    
-    /*for(int i=0; i<pkt.mincost.length;i++){
-    	int min = RouterSimulator.INFINITY;
-    	int tmp = nTables[myID][i];
-    	System.out.println(tmp);
-    	 for (int x : neighbors) {
-    		 if(costs[x] + nTables[x][i] < min){
-    			 min = costs[x] + pkt.mincost[i];
-    			 nTables[myID][i] = min;
-    		 }
-    	 }
-    	 System.out.println(nTables[myID][i]);
-    	 if(tmp != nTables[myID][i]) flag = true;
-    }*/
     if(flag) broadcast();
     
     //System.out.println("myID = "+ myID +" ----> "+Arrays.toString(nTables[myID]));
@@ -96,14 +78,14 @@ public class RouterNode {
 
   //--------------------------------------------------
   public void updateLinkCost(int dest, int newcost) {
-	  /*System.out.println("("+myID+","+dest+") ---> "+newcost);
+	  System.out.println("("+myID+","+dest+") ---> "+newcost);
 	  costs[dest] = newcost;
 	  int[] fakeCost = costs.clone();
 	  fakeCost[dest] = RouterSimulator.INFINITY;
 	  for (int x : neighbors) {
 			  sendUpdate(new RouterPacket(myID, x, fakeCost));
 	  }
-	  */
+	  
   }
 
   private void getNeighbors(){
