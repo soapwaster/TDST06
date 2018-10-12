@@ -37,11 +37,12 @@ public class RouterNode {
         		min.add(costs[x]+nTables[x][i]);
         	}
         	int min_value = Collections.min(min);
-        	if(myID == 2){
+        	/*if(myID == 2){
         		System.out.println("min_value : " + min_value);
             	System.out.println("nTables[" + myID + "]["+i+"]  : " + nTables[myID][i]);
-        	}
-        	if(min_value < nTables[myID][i]){
+        	}*/
+        	System.out.println("min_value : "+min_value);
+        	if(min_value != nTables[myID][i]){
         		flag = true;
         	}
         	nTables[myID][i] = min_value;
@@ -104,6 +105,9 @@ public class RouterNode {
 			  sendUpdate(new RouterPacket(myID, x, fakeCost));
 	  }
 	  */
+	  costs[dest] = newcost;
+	  nTables[myID][dest] = newcost;
+	  broadcast();
   }
 
   private void getNeighbors(){
